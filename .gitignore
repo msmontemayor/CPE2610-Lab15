@@ -53,3 +53,22 @@ dkms.conf
 
 # debug information files
 *.dwo
+Debug/
+
+#build
+Release/
+bin/
+obj/
+*.elf
+*.bin
+*.hex
+*.map
+*.lst
+*.o
+*.d
+
+# STM32CubeIDE / Eclipse
+.settings/
+.project
+.cproject
+*.launch
