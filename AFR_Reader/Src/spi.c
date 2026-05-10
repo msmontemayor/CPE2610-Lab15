@@ -65,12 +65,12 @@ void spi_init(void) {
     SPI_PORT->CR1 |= SPI_CR1_MSTR;      // master
     SPI_PORT->CR1 |= SPI_CR1_SSM;       // software NSS management
     SPI_PORT->CR1 |= SPI_CR1_SSI;       // internal NSS high
+    SPI_PORT->CR1 |= SPI_CR1_LSBFIRST;
     SPI_PORT->CR1 |= (0x7 << SPI_CR1_BR_Pos);      // baud prescaler,
-    SPI_PORT->CR1 |= SPI_CR1_CPOL;
-    SPI_PORT->CR1 |= SPI_CR1_CPHA;
+    //SPI_PORT->CR1 |= SPI_CR1_CPOL;
+    //SPI_PORT->CR1 |= SPI_CR1_CPHA;
     // mode 3 initially
     // DFF = 0 means 8-bit mode
-    // LSBFIRST = 0 means MSB first
 }
 
 uint8_t spi_transfer_byte(uint8_t tx_byte) {
@@ -203,10 +203,19 @@ int spi_wr(int write_length, uint8_t *write_data,
     return 0;
 }
 
-void print_array(const char *label, uint8_t *data, int len) {
-    printf("%s: ", label);
-    for (int i = 0; i < len; i++) {
-        printf("%u ", data[i]);
+void spi_write_array(const uint8_t *data, int len){
+    if (data == 0 || len <= 0) {
+        return;
     }
-    printf("\r\n");
+
+    SPI_PORT->CR1 |= SPI_CR1_SPE;
+
+    for (int i = 0; i < len; i++) {
+        spi_xfer_byte(data[i]);
+
+        while (SPI_PORT->SR & SPI_SR_BSY) {
+        }
+    }
+
+    SPI_PORT->CR1 &= ~SPI_CR1_SPE;
 }

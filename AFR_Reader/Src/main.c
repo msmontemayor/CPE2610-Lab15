@@ -18,12 +18,27 @@
 
 #include <stdint.h>
 
-#if !defined(__SOFT_FP__) && defined(__ARM_FP)
-  #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
-#endif
+#include "spi.h"
+#include "timer.h"
+#include "itron.h"
 
-int main(void)
-{
-    /* Loop forever */
-	for(;;);
+
+int main(void){
+
+	timer_init_1ms();
+	spi_init();
+	vfd_init();
+
+	float lambda = 0.5f;
+
+
+	while(1){
+		for(int i = 0; i<50; i++){
+			vfd_display_afr(lambda+((float)i/50));
+		}
+		for(int i = 50; i>0; i--){
+			vfd_display_afr(lambda+((float)i/50));
+		}
+		//loop forever
+	}
 }

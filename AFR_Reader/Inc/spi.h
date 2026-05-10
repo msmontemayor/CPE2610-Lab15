@@ -73,6 +73,6 @@ int spi_wr(int write_length, uint8_t *write_data,
  * @param data Pointer to the byte array.
  * @param len Number of elements in the array.
  */
-void print_array(const char *label, uint8_t *data, int len);
+void spi_write_array(const uint8_t *data, int len);
 
 #endif /* SPI_H_ */

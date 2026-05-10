@@ -8,7 +8,6 @@
 
 
 #include "timer.h"
-#include "button.h"
 #include "regaddr.h"
 #include <stdio.h>
 
@@ -40,7 +39,6 @@ uint32_t millis(void){
 
 void SysTick_Handler(void){
     g_ms++;
-    getButtonStates();
 }
 
 void init_timers(){

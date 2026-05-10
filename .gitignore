@@ -70,5 +70,6 @@ obj/
 # STM32CubeIDE / Eclipse
 .settings/
 .project
-.cproject
+*.cproject
 *.launch
+*language.settings.xml
