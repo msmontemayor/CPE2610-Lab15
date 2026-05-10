@@ -19,32 +19,43 @@
  * of fun integrating this display into our project and our project being
  * something so useful to the formula team.
  *
+ *
+ * Michael's Paragraph:
+ * In this lab I learned how a lambda/wideband O2 sensor works and how to
+ * control current instead of voltage with the microcontroller. While the high
+ * level theory on how the sensor operates was simple to understand, interfacing
+ * with the sensor was a challenge. I got to use and now understand the op-amp
+ * circuits that were necessary for interfacing with an external peripheral that
+ * operates at 12V rather than logic level, and for filtering the pwm outputs.
+ * Because of the non-operational state of the vehicle after competition, I was
+ * not comfortable testing the sensor outside of the car due to its operating
+ * temperature being 1400 degrees F. I instead created a test script that would
+ * verify the operation of the hardware. Overall, I had a great time working on
+ * this project, using the peripherals we used in class more practically.
  ******************************************************************************
  */
 
 #include <stdint.h>
-
+#include <stdio.h>
+#include "stm32f411xe.h"
+#include "AFR_Controller.h"
+#include "AFR_test.h"
+#include "timer.h"
+#include "uart.h"
 #include "spi.h"
 #include "timer.h"
 #include "itron.h"
 
-
 int main(void){
 
-	timer_init_1ms();
+	systick_init();
 	spi_init();
 	vfd_init();
-
-	float lambda = 0.5f;
-
+	initUsart2();
+	AFR_controller_init();
+	AFR_Timers_Init();
 
 	while(1){
-		for(int i = 0; i<5; i++){
-			vfd_display_afr(lambda+((float)i/5));
-		}
-		for(int i = 5; i>0; i--){
-			vfd_display_afr(lambda+((float)i/5));
-		}
-		//loop forever
+		vfd_display_afr(get_lambda());
 	}
 }

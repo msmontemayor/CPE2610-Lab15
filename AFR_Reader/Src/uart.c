@@ -9,93 +9,75 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "uart.h"
-#include "regaddr.h"
+#include "stm32f411xe.h" // Provides USART_TypeDef and GPIO_TypeDef
 
-//File Static Register Pointers
-static volatile const uint32_t* const sr = (uint32_t*) USART2_SR;
-static volatile uint8_t* const dr = (uint8_t*) USART2_DR;
+// 1. Replaced manual static pointers with standard CMSIS register access
+// USART2 is already defined as ((USART_TypeDef *) USART2_BASE)
 
-// These will override _read and _write in syscalls.c, which are
-// prototyped as weak
 int _read(int file, char *ptr, int len)
 {
-	// Modified the for loop in order to get the correct behavior for fgets
-	int byteCnt = 0;
-	for (int i = 0; i < len; i++)
-	{
-		byteCnt++;
-		*ptr = usart2Getch();
-        //Exit with newline character
-		if(*ptr == '\n') break;
-		//move to next character
+    int byteCnt = 0;
+    for (int i = 0; i < len; i++)
+    {
+        *ptr = usart2Getch();
+        byteCnt++;
+        if (*ptr == '\n') break;
         ptr++;
-	}
-	//return len;
-	return byteCnt; // Return byte count
+    }
+    return byteCnt;
 }
 
 int _write(int file, char *ptr, int len)
 {
-	for (int i = 0; i < len; i++)
-	{
-		usart2Putch(*ptr++);
-	}
-	return len;
+    for (int i = 0; i < len; i++)
+    {
+        usart2Putch(*ptr++);
+    }
+    return len;
 }
 
-char usart2Getch(){
-	//Wait for character to be placed
-	while((*(sr)&RXNE_MASK) != RXNE_MASK);
+char usart2Getch() {
+    // 2. Use USART_SR_RXNE instead of RXNE_MASK
+    while (!(USART2->SR & USART_SR_RXNE));
 
-	char c = ((char) *dr);  // Read character from usart
-	usart2Putch(c);  // Echo back
-	//usart2Putch(c);  // echo back again
+    char c = (char)(USART2->DR & 0xFF);
+    usart2Putch(c); // Echo back
 
-	if (c == '\r'){  // If character is CR
-		usart2Putch('\n');  // send it
-		c = '\n';   // Return LF. fgets is terminated by LF
-	}
-
-	return c;
+    if (c == '\r') {
+        usart2Putch('\n');
+        c = '\n';
+    }
+    return c;
 }
 
-void usart2Putch(char c){
-	//Wait for empty space to send
-	while((*(sr)&TXE_MASK) != TXE_MASK);
-	*dr = c;
+void usart2Putch(char c) {
+    // 3. Use USART_SR_TXE instead of TXE_MASK
+    while (!(USART2->SR & USART_SR_TXE));
+    USART2->DR = (uint16_t)c;
 }
 
-void initUsart2(){
-	// Enable clocks for GPIOA and USART2
-	*((volatile uint32_t*) RCC_AHB1ENR) |= GPIOAEN_MASK;
-	*((volatile uint32_t*) RCC_APB1ENR) |= USART2EN_MASK;
+void initUsart2() {
+    // 4. Use RCC structure for clock enabling
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+    RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
-	// Function 7 of PORTA pins is USART
-	uint32_t temp;
-	volatile uint32_t* const afrl = (uint32_t*) GPIOA_AFRL;
-	temp = *afrl;
-	temp &= ~ (0xFF<<(2*4)); // Clear the bits associated with PA3 and PA2
-	temp |= (0x77<<(2*4));  // Choose function 7 for both PA3 and PA2
-	*afrl = temp;
+    // 5. Use GPIOA structure for Pin Multiplexing (PA2, PA3)
+    // AFR[0] is equivalent to AFRL (Low register for pins 0-7)
+    GPIOA->AFR[0] &= ~(0xFFU << (2 * 4));
+    GPIOA->AFR[0] |= (0x77U << (2 * 4));
 
-	volatile uint32_t* const moder = (uint32_t*) GPIOA_MODER;
-	temp = *moder;
-	temp &= ~(0xF<<(2*2));  // Clear mode bits for PA3 and PA2
-	temp |= (0b1010<<(2*2));  // Both PA3 and PA2 in alt function mode
-	*moder = temp;
+    // 6. Set Mode to Alternate Function (10) for PA2 and PA3
+    GPIOA->MODER &= ~(0xFU << (2 * 2));
+    GPIOA->MODER |= (0xAU << (2 * 2)); // 0b1010 shifted
 
-	// Set up USART2
-	//USART2_init();  //8n1 no flow control
-	// over8 = 0..oversample by 16
-	// M = 0..1 start bit, data size is 8, 1 stop bit
-	// PCE= 0..Parity check not enabled
-	// no interrupts... using polling
-	*((volatile uint32_t*) USART2_CR1) = UE_MASK|TE_MASK|RE_MASK; // Enable UART, Tx and Rx
-	*((volatile uint32_t*) USART2_CR2) = 0;  // This is the default, but do it anyway
-	*((volatile uint32_t*) USART2_CR3) = 0;  // This is the default, but do it anyway
-	*((volatile uint32_t*) USART2_BRR) = F_CPU/BAUD;
+    // 7. Setup USART2 using standard bit definitions
+    // UE: USART Enable, TE: Transmitter Enable, RE: Receiver Enable
+    USART2->CR1 = USART_CR1_UE | USART_CR1_TE | USART_CR1_RE;
+    USART2->CR2 = 0;
+    USART2->CR3 = 0;
 
-	// Flush output buffer
-	 setvbuf(stdout, NULL, _IONBF, 0);
+    // F_CPU and BAUD should be defined in your header
+    USART2->BRR = F_CPU / BAUD;
+
+    setvbuf(stdout, NULL, _IONBF, 0);
 }
-

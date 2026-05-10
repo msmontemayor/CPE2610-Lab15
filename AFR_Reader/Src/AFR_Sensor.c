@@ -5,9 +5,11 @@
  *      Author: montemayorm
  */
 
+#include "stm32f411xe.h"
 #include "AFR_Sensor.h"
 
 static READINGS readings;
+static channel_e channel;
 
 /**
  * @brief initialize the afr sensor
@@ -59,7 +61,7 @@ void AFR_init(){
  * returns a struct containing the narrowband and wideband sensor readings
  */
 READINGS sensor_read(){
-
+	return readings;
 }
 
 /**
