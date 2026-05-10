@@ -6,12 +6,18 @@
  ******************************************************************************
  * @attention
  *
- * Copyright (c) 2026 STMicroelectronics.
- * All rights reserved.
- *
- * This software is licensed under terms that can be found in the LICENSE file
- * in the root directory of this software component.
- * If no LICENSE file comes with this software, it is provided AS-IS.
+ * 
+ * Carson's Paragraph:
+ * I learned the hardware implementation of pull resistors, using them to keep
+ * my system stable through stm32 reset. additionally i determined the Itron Vfd
+ * although very cool, is not very SPI friendly, nor is it 3.3v friendly either.
+ * I had to learn about logic level shifter using a part from the TSC. Once
+ * that part had been established it was easy enough to set up the display
+ * there is a character mode which made writing easy, however i did make a
+ * custom function to simplify the work lambda to the symbol for lambda
+ * allowing for more space for future graphics is needed. I had a good amount
+ * of fun integrating this display into our project and our project being
+ * something so useful to the formula team.
  *
  ******************************************************************************
  */
@@ -33,11 +39,11 @@ int main(void){
 
 
 	while(1){
-		for(int i = 0; i<50; i++){
-			vfd_display_afr(lambda+((float)i/50));
+		for(int i = 0; i<5; i++){
+			vfd_display_afr(lambda+((float)i/5));
 		}
-		for(int i = 50; i>0; i--){
-			vfd_display_afr(lambda+((float)i/50));
+		for(int i = 5; i>0; i--){
+			vfd_display_afr(lambda+((float)i/5));
 		}
 		//loop forever
 	}
