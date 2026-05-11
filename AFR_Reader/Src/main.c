@@ -17,7 +17,8 @@
  * custom function to simplify the work lambda to the symbol for lambda
  * allowing for more space for future graphics is needed. I had a good amount
  * of fun integrating this display into our project and our project being
- * something so useful to the formula team.
+ * something so useful to the formula team. Additionally i learned what the 6 
+ * magic wires are in the wide band o2 sensor
  *
  *
  * Michael's Paragraph:
